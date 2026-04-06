@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Usuários (Clientes e Profissionais)
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String
+  password      String
+  role          Role           @default(CUSTOMER)
+  avatar        String?        // Foto de perfil
+  createdAt     DateTime       @default(now())
+
+  // Relações
+  professional  Professional?  // Se for profissional, tem perfil extra
+  appointments  Appointment[]  @relation("CustomerAppointments")
+}
+
+enum Role {
+  CUSTOMER
+  PROFESSIONAL
+  ADMIN
+}
+
+// Perfil detalhado da Profissional (O que aparece nos cards da Imagem 03)
+model Professional {
+  id            String         @id @default(uuid())
+  userId        String         @unique
+  user          User           @relation(fields: [userId], references: [id])
+  bio           String?
+  category      String         // Manicure, Maquiagem, etc.
+  rating        Float          @default(5.0)
+  basePrice     Decimal        @db.Decimal(10, 2)
+  location      String         // Bairro/Região
+  
+  appointments  Appointment[]  @relation("ProfessionalAppointments")
+}
+
+// O Agendamento (O fluxo da Imagem 04)
+model Appointment {
+  id             String       @id @default(uuid())
+  scheduledAt    DateTime     // Data e hora do serviço
+  status         Status       @default(PENDING)
+  totalPrice     Decimal      @db.Decimal(10, 2)
+  
+  customerId     String
+  customer       User         @relation("CustomerAppointments", fields: [customerId], references: [id])
+  
+  professionalId String
+  professional   Professional @relation("ProfessionalAppointments", fields: [professionalId], references: [id])
+
+  createdAt      DateTime     @default(now())
+}
+
+enum Status {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}

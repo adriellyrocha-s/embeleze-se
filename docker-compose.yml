@@ -1,0 +1,42 @@
+services:
+  # Banco de Dados PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: embelezese_db
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: locker2026
+      POSTGRES_DB: embelezese_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Backend API (Node.js)
+  api:
+    build: ./api
+    container_name: embelezese_api
+    restart: always
+    ports:
+      - "3333:3333"
+    environment:
+      DATABASE_URL: "postgresql://admin:locker2026@db:5432/embelezese_dev"
+    depends_on:
+      - db
+    volumes:
+      - ./api:/usr/src/app
+      - /usr/src/app/node_modules
+
+  # Frontend (React) - Opcional rodar no Docker em Dev
+  web:
+    build: ./web
+    container_name: embelezese_web
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./web:/usr/src/app
+      - /usr/src/app/node_modules
+
+volumes:
+  postgres_data:
