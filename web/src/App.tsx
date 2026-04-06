@@ -1,10 +1,14 @@
 import { ProfessionalList } from './components/ProfessionalList'
+import { Navbar } from './components/Navbar'
+import { Hero } from './components/Hero'
 
 function App() {
   return (
     <div className="min-h-screen bg-[#FDF8F8]">
+      <Navbar />
+      <Hero />
       <header className="p-10 text-center">
-        <h1 className="font-serif text-4xl text-rose-600">Embeleze-se</h1>
+        
       </header>
 
       <main className="max-w-4xl mx-auto">

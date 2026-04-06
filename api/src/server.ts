@@ -40,6 +40,35 @@ const start = async () => {
 // Rota de teste inicial
 fastify.get('/', async () => {
   return { message: 'Bem-vinda à API da Embeleze-se! ✨' }
+}),
+
+// Rota para cadastrar uma nova profissional
+fastify.post('/professionals', async (request, reply) => {
+  const { name, email, password, category, location, basePrice, avatar } = request.body as any
+
+  // 1. Cria o Usuário
+  const user = await prisma.user.create({
+    data: {
+      name,
+      email,
+      password, // Lembre-se: em produção usaremos bcrypt aqui!
+      avatar,
+      role: 'PROFESSIONAL'
+    }
+  })
+
+  // 2. Cria o Perfil Profissional vinculado
+  const professional = await prisma.professional.create({
+    data: {
+      userId: user.id,
+      category,
+      location,
+      basePrice: Number(basePrice),
+      rating: 5.0 // Começa com nota máxima!
+    }
+  })
+
+  return reply.status(201).send(professional)
 })
 
 start()
