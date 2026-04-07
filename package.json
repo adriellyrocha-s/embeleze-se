@@ -2,11 +2,13 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.1"
   },
-
   "scripts": {
-  "dev:api": "npm run dev --prefix api",
-  "dev:web": "npm run dev --prefix web",
-  "docker:up": "docker-compose up -d",
-  "docker:down": "docker-compose down"
+    "dev:api": "npm run dev --prefix api",
+    "dev:web": "npm run dev --prefix web",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "dependencies": {
+    "lucide-react": "^1.7.0"
   }
 }

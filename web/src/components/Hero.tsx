@@ -1,3 +1,5 @@
+import { ArrowRight, ShoppingBag, MapPin } from 'lucide-react'
+
 export function Hero() {
   return (
     <div className="relative w-full h-screen flex flex-col items-center justify-center overflow-hidden bg-[#E5E5E5]">
@@ -47,8 +49,8 @@ export function Hero() {
 
         {/* Localização Badge */}
         <div className="mt-16 flex items-center gap-2 text-gray-500 text-xs">
-          <span className="text-lg">📍</span>
-          12 profissionais ativos num raio de 5km
+          <MapPin size={14} strokeWidth={1.5} className="text-rose-400" />
+          10 profissionais ativos num raio de 5km
         </div>
       </div>
     </div>
