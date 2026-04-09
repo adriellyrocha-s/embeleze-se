@@ -1,6 +1,11 @@
-import { ArrowRight, ShoppingBag, MapPin } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 
-export function Hero() {
+type HeroProps = {
+  onExplore?: () => void
+  onViewProducts?: () => void
+}
+
+export function Hero({ onExplore, onViewProducts }: HeroProps) {
   return (
     <div className="relative w-full h-screen flex flex-col items-center justify-center overflow-hidden bg-[#E5E5E5]">
       {/* Imagem de Fundo com Blur e Opacidade */}
@@ -37,12 +42,20 @@ export function Hero() {
         </p>
 
         <div className="mt-12 flex flex-wrap gap-4 justify-center">
-          <button className="bg-[#C28C91] text-white px-10 py-5 rounded-full text-sm font-medium flex items-center gap-3 hover:bg-[#b17a80] transition-all shadow-xl shadow-rose-200">
+          <button
+            type="button"
+            onClick={onExplore}
+            className="bg-[#C28C91] text-white px-10 py-5 rounded-full text-sm font-medium flex items-center gap-3 hover:bg-[#b17a80] transition-all shadow-xl shadow-rose-200"
+          >
             Solicitar Serviço
             <span className="text-xl">→</span>
           </button>
           
-          <button className="bg-white/10 backdrop-blur-md border border-white/50 text-gray-800 px-10 py-5 rounded-full text-sm font-medium hover:bg-white/40 transition-all">
+          <button
+            type="button"
+            onClick={onViewProducts}
+            className="bg-white/10 backdrop-blur-md border border-white/50 text-gray-800 px-10 py-5 rounded-full text-sm font-medium hover:bg-white/40 transition-all"
+          >
             Ver Produtos
           </button>
         </div>

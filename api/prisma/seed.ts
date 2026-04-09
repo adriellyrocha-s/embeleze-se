@@ -1,4 +1,5 @@
-import { PrismaClient } from '@prisma/client'
+const { PrismaClient } = require('@prisma/client')
+const bcrypt = require('bcryptjs')
 const prisma = new PrismaClient()
 
 async function main() {
@@ -7,12 +8,25 @@ async function main() {
   await prisma.professional.deleteMany()
   await prisma.user.deleteMany()
 
+  const defaultPasswordHash = await bcrypt.hash('password123', 10)
+  const adminEmail = (process.env.ADMIN_DEFAULT_EMAIL || 'admin@embeleze.se').toLowerCase()
+  const adminPasswordHash = await bcrypt.hash(process.env.ADMIN_DEFAULT_PASSWORD || 'Admin@123', 10)
+
+  await prisma.user.create({
+    data: {
+      name: 'Administrador Embeleze-se',
+      email: adminEmail,
+      password: adminPasswordHash,
+      role: 'ADMIN',
+    },
+  })
+
   // Criando a Camila (Maquiadora)
   await prisma.user.create({
     data: {
       name: 'Camila Oliveira',
       email: 'camila@embeleze.se',
-      password: 'password123', 
+      password: defaultPasswordHash,
       role: 'PROFESSIONAL',
       professional: {
         create: {
@@ -20,7 +34,8 @@ async function main() {
           bio: 'Especialista em maquiagem social e noivas.',
           location: 'Moema',
           basePrice: 80.00,
-          rating: 5.0
+          rating: 5.0,
+          status: 'APTO',
         }
       }
     }
@@ -31,7 +46,7 @@ async function main() {
     data: {
       name: 'Ana Carolina Silva',
       email: 'ana@embeleze.se',
-      password: 'password123',
+      password: defaultPasswordHash,
       role: 'PROFESSIONAL',
       professional: {
         create: {
@@ -39,13 +54,15 @@ async function main() {
           bio: 'Unhas perfeitas com atendimento VIP.',
           location: 'Vila Mariana',
           basePrice: 45.00,
-          rating: 4.9
+          rating: 4.9,
+          status: 'APTO',
         }
       }
     }
   })
 
   console.log('✅ Banco de dados semeado com sucesso!')
+  console.log(`🔐 Admin criado: ${adminEmail}`)
 }
 
 main()

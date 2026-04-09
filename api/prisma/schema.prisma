@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "windows", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -28,6 +29,12 @@ enum Role {
   ADMIN
 }
 
+enum PartnerStatus {
+  ANALISANDO
+  APTO
+  REPROVADO
+}
+
 // Perfil detalhado da Profissional (O que aparece nos cards da Imagem 03)
 model Professional {
   id            String         @id @default(uuid())
@@ -38,6 +45,7 @@ model Professional {
   rating        Float          @default(5.0)
   basePrice     Decimal        @db.Decimal(10, 2)
   location      String         // Bairro/Região
+  status        PartnerStatus  @default(ANALISANDO)
   
   appointments  Appointment[]  @relation("ProfessionalAppointments")
 }

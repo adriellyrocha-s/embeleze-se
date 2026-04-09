@@ -1,15 +1,19 @@
 import { Hand, Scissors, Sparkles, Eye, Heart, Flower2 } from 'lucide-react'
 
 const categories = [
-  { id: 1, name: 'Manicure', desc: 'Unhas perfeitas', icon: Hand },
-  { id: 2, name: 'Cabeleireiro', desc: 'Corte e estilo', icon: Scissors },
-  { id: 3, name: 'Maquiadora', desc: 'Maquiagem profissional', icon: Sparkles },
-  { id: 4, name: 'Designer', desc: 'Design de sobrancelhas', icon: Eye },
-  { id: 5, name: 'Massagista', desc: 'Massagem', icon: Heart },
-  { id: 6, name: 'Esteticista', desc: 'Cuidados com a pele', icon: Flower2 },
+  { id: 1, name: 'Manicure', desc: 'Unhas perfeitas', icon: Hand, targetCategory: 'Manicure' },
+  { id: 2, name: 'Cabeleireiro', desc: 'Corte e estilo', icon: Scissors, targetCategory: 'Cabeleireiro' },
+  { id: 3, name: 'Maquiadora', desc: 'Maquiagem profissional', icon: Sparkles, targetCategory: 'Maquiadora' },
+  { id: 4, name: 'Designer', desc: 'Design de sobrancelhas', icon: Eye, targetCategory: 'Designer de Sobrancelhas' },
+  { id: 5, name: 'Massagista', desc: 'Massagem', icon: Heart, targetCategory: 'Massagista' },
+  { id: 6, name: 'Esteticista', desc: 'Cuidados com a pele', icon: Flower2, targetCategory: 'Esteticista' },
 ]
 
-export function CategorySection() {
+type CategorySectionProps = {
+  onSelectCategory?: (category: string) => void
+}
+
+export function CategorySection({ onSelectCategory }: CategorySectionProps) {
   return (
     <section className="bg-[#F3E9E9] py-24 px-16">
       <div className="max-w-[1400px] mx-auto">
@@ -24,13 +28,18 @@ export function CategorySection() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
           {categories.map((cat) => (
-            <div key={cat.id} className="bg-white rounded-[2.5rem] p-10 flex flex-col items-center text-center shadow-xl shadow-black/5 hover:-translate-y-2 transition-all cursor-pointer">
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => onSelectCategory?.(cat.targetCategory)}
+              className="bg-white rounded-[2.5rem] p-10 flex flex-col items-center text-center shadow-xl shadow-black/5 hover:-translate-y-2 transition-all cursor-pointer"
+            >
               <div className="w-16 h-16 bg-[#FDF8F8] rounded-full flex items-center justify-center mb-6">
                 <cat.icon size={26} strokeWidth={1.2} className="text-[#C38B94]" />
               </div>
               <h3 className="font-serif text-lg text-gray-800 mb-1">{cat.name}</h3>
               <p className="text-[10px] text-gray-400 uppercase tracking-widest">{cat.desc}</p>
-            </div>
+            </button>
           ))}
         </div>
       </div>
