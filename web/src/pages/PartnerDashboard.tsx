@@ -7,11 +7,12 @@ type PartnerDashboardProps = {
   onBackHome: () => void
   onGoToRegister: () => void
   onGoToAdminPanel: () => void
+  onGoToClientArea: () => void
 }
 
 const weekDays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom']
 
-export function PartnerDashboard({ onBackHome, onGoToRegister, onGoToAdminPanel }: PartnerDashboardProps) {
+export function PartnerDashboard({ onBackHome, onGoToRegister, onGoToAdminPanel, onGoToClientArea }: PartnerDashboardProps) {
   const partnerName = localStorage.getItem('embeleze_partner_name') || 'Parceira'
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('embeleze_partner_logged_in') === 'true')
   const [currentSection, setCurrentSection] = useState<'overview' | 'appointments' | 'requests' | 'profile'>('overview')
@@ -29,6 +30,18 @@ export function PartnerDashboard({ onBackHome, onGoToRegister, onGoToAdminPanel 
   const [appointmentsFilter, setAppointmentsFilter] = useState<'upcoming' | 'completed' | 'all'>('upcoming')
   const [requestsList, setRequestsList] = useState<any[]>([])
   const [partnerProfile, setPartnerProfile] = useState<any>(null)
+  const [profileFormData, setProfileFormData] = useState({
+    name: '',
+    category: '',
+    bio: '',
+    city: '',
+    neighborhood: '',
+    minPrice: '',
+    maxPrice: '',
+    workHours: 'Seg-Dom 7h-20h'
+  })
+  const [services, setServices] = useState<string[]>([])
+  const [newService, setNewService] = useState('')
 
   const maxValue = useMemo(() => Math.max(...weeklyAppointments, 1), [weeklyAppointments])
 
@@ -93,7 +106,35 @@ export function PartnerDashboard({ onBackHome, onGoToRegister, onGoToAdminPanel 
       setPartnerStatus(response.data.professional?.status || 'ANALISANDO')
       setIsLoggedIn(true)
     } catch (err: any) {
-      setLoginError(err?.response?.data?.message || 'Nao foi possivel fazer login no momento.')
+      try {
+        const customerResponse = await api.post('/auth/customer/login', {
+          email: loginEmail.trim().toLowerCase(),
+          password: loginPassword,
+        })
+
+        localStorage.removeItem('embeleze_admin_logged_in')
+        localStorage.removeItem('embeleze_admin_id')
+        localStorage.removeItem('embeleze_admin_name')
+        localStorage.removeItem('embeleze_admin_email')
+        localStorage.removeItem('embeleze_admin_key')
+        localStorage.removeItem('embeleze_admin_last_activity')
+        localStorage.removeItem('embeleze_partner_logged_in')
+        localStorage.removeItem('embeleze_partner_id')
+        localStorage.removeItem('embeleze_partner_professional_id')
+        localStorage.removeItem('embeleze_partner_status')
+
+        localStorage.setItem('embeleze_client_logged_in', 'true')
+        localStorage.setItem('embeleze_client_profile_created', 'true')
+        localStorage.setItem('embeleze_client_id', customerResponse.data.id)
+        localStorage.setItem('embeleze_client_name', customerResponse.data.name)
+        localStorage.setItem('embeleze_client_email', customerResponse.data.email)
+
+        setLoginError('')
+        onGoToClientArea()
+        return
+      } catch (customerErr: any) {
+        setLoginError(customerErr?.response?.data?.message || err?.response?.data?.message || 'Nao foi possivel fazer login no momento.')
+      }
     } finally {
       setIsLoadingLogin(false)
     }
@@ -190,8 +231,55 @@ export function PartnerDashboard({ onBackHome, onGoToRegister, onGoToAdminPanel 
           status: 'PENDING',
         },
       ])
+
+      // Exemplo de agendamento confirmado
+      setAppointmentsList([
+        {
+          id: 'apt-1',
+          clientName: 'João Silva',
+          serviceType: 'Manicure',
+          scheduledAt: '2026-04-11T14:30',
+          location: 'Centro, São Paulo',
+          totalPrice: 75,
+          clientPhone: '11 98765-4321',
+          status: 'CONFIRMED'
+        }
+      ])
     }
   }, [isLoggedIn])
+
+  // Sincronizar dados do perfil com o formulário
+  useEffect(() => {
+    if (partnerProfile) {
+      setProfileFormData({
+        name: partnerProfile.name || '',
+        category: partnerProfile.category || '',
+        bio: partnerProfile.bio || '',
+        city: partnerProfile.location?.split(',')[0] || '',
+        neighborhood: partnerProfile.location?.split(',')[1] || '',
+        minPrice: partnerProfile.basePrice || '',
+        maxPrice: partnerProfile.basePrice || '',
+        workHours: 'Seg-Dom 7h-20h'
+      })
+      setServices(['Maquiagem Social', 'Maquiagem para Noivas', 'Maquiagem Artística', 'Automaquiagem (Curso)'])
+    }
+  }, [partnerProfile])
+
+  function handleAddService() {
+    if (newService.trim()) {
+      setServices([...services, newService.trim()])
+      setNewService('')
+    }
+  }
+
+  function handleRemoveService(index: number) {
+    setServices(services.filter((_, i) => i !== index))
+  }
+
+  function handleSaveProfile() {
+    console.log('Salvando perfil:', profileFormData, services)
+    alert('Perfil salvo com sucesso!')
+  }
 
   if (!isLoggedIn) {
     return (
@@ -610,6 +698,19 @@ export function PartnerDashboard({ onBackHome, onGoToRegister, onGoToAdminPanel 
                                     r.id === request.id ? { ...r, status: 'ACCEPTED' } : r
                                   )
                                   setRequestsList(updated)
+                                  
+                                  // Adicionar à lista de agendamentos
+                                  const newAppointment = {
+                                    id: request.id,
+                                    clientName: request.clientName,
+                                    serviceType: request.serviceCategory,
+                                    scheduledAt: `${request.scheduledDate}T${request.scheduledTime}`,
+                                    location: request.location,
+                                    totalPrice: request.budget,
+                                    clientPhone: request.server,
+                                    status: 'CONFIRMED'
+                                  }
+                                  setAppointmentsList([...appointmentsList, newAppointment])
                                 }}
                                 className="py-1 px-3 bg-green-600 hover:bg-green-700 text-white rounded font-bold text-xs w-fit"
                               >
@@ -644,40 +745,145 @@ export function PartnerDashboard({ onBackHome, onGoToRegister, onGoToAdminPanel 
 
         {currentSection === 'profile' && (
           <>
-            <h1 className="font-serif text-6xl">Meu Perfil</h1>
-            <p className="text-gray-500 mt-2 mb-10">Informacoes profissionais</p>
+            <h1 className="font-serif text-4xl">Meu Perfil</h1>
+            <p className="text-gray-500 text-sm mt-1 mb-6">Bem-vindo, {partnerName}</p>
 
-            <div className="bg-white border border-rose-100 rounded-3xl p-8 shadow-sm">
-              {partnerProfile ? (
-                <div className="space-y-6">
+            <div className="bg-white border border-gray-200 rounded-2xl p-8 space-y-8 shadow-sm">
+              {/* Informações Básicas */}
+              <div>
+                <h2 className="text-xl font-bold text-[#1A1A1A] mb-4">Informações Básicas</h2>
+                <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className="block text-sm text-gray-600 mb-2">Nome</label>
-                    <p className="text-lg font-semibold">{partnerProfile.name || partnerName}</p>
+                    <label className="block text-xs text-gray-600 font-bold mb-2">Nome *</label>
+                    <input
+                      type="text"
+                      value={profileFormData.name}
+                      onChange={(e) => setProfileFormData({...profileFormData, name: e.target.value})}
+                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A1A1A] focus:border-[#C38B94] focus:outline-none"
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-600 mb-2">Categoria</label>
-                    <p className="text-lg font-semibold">{partnerProfile.category}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-2">Bio</label>
-                    <p className="text-lg">{partnerProfile.bio}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-2">Localizacao</label>
-                    <p className="text-lg font-semibold">{partnerProfile.location}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-2">Preco Base</label>
-                    <p className="text-lg font-semibold">R$ {Number(partnerProfile.basePrice || 0).toFixed(2).replace('.', ',')}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-2">Status</label>
-                    <p className="text-lg font-semibold text-[#C38B94]">{partnerProfile.status}</p>
+                    <label className="block text-xs text-gray-600 font-bold mb-2">Categoria *</label>
+                    <select 
+                      value={profileFormData.category}
+                      onChange={(e) => setProfileFormData({...profileFormData, category: e.target.value})}
+                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A1A1A] focus:border-[#C38B94] focus:outline-none"
+                    >
+                      <option value="">Selecionar</option>
+                      <option value="Maquiadora">Maquiadora</option>
+                      <option value="Manicure">Manicure</option>
+                      <option value="Pedicure">Pedicure</option>
+                      <option value="Cabelereira">Cabelereira</option>
+                    </select>
                   </div>
                 </div>
-              ) : (
-                <p className="text-center text-gray-400 py-12">Carregando perfil...</p>
-              )}
+                <div className="mb-4">
+                  <label className="block text-xs text-gray-400 font-bold mb-2">Bio</label>
+                  <textarea
+                    value={profileFormData.bio}
+                    onChange={(e) => setProfileFormData({...profileFormData, bio: e.target.value})}
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A1A1A] focus:border-[#C38B94] focus:outline-none"
+                    rows={3}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-xs text-gray-600 font-bold mb-2">Cidade *</label>
+                    <input
+                      type="text"
+                      value={profileFormData.city}
+                      onChange={(e) => setProfileFormData({...profileFormData, city: e.target.value})}
+                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A1A1A] focus:border-[#C38B94] focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 font-bold mb-2">Bairro</label>
+                    <input
+                      type="text"
+                      value={profileFormData.neighborhood}
+                      onChange={(e) => setProfileFormData({...profileFormData, neighborhood: e.target.value})}
+                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A1A1A] focus:border-[#C38B94] focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-xs text-gray-600 font-bold mb-2">Preço Mínimo (R$)</label>
+                    <input
+                      type="number"
+                      value={profileFormData.minPrice}
+                      onChange={(e) => setProfileFormData({...profileFormData, minPrice: e.target.value})}
+                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A1A1A] focus:border-[#C38B94] focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 font-bold mb-2">Preço Máximo (R$)</label>
+                    <input
+                      type="number"
+                      value={profileFormData.maxPrice}
+                      onChange={(e) => setProfileFormData({...profileFormData, maxPrice: e.target.value})}
+                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A1A1A] focus:border-[#C38B94] focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 font-bold mb-2">Horário de Trabalho</label>
+                  <input
+                    type="text"
+                    value={profileFormData.workHours}
+                    onChange={(e) => setProfileFormData({...profileFormData, workHours: e.target.value})}
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A1A1A] focus:border-[#C38B94] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Serviços Oferecidos */}
+              <div>
+                <h2 className="text-xl font-bold text-[#1A1A1A] mb-4">Serviços Oferecidos</h2>
+                <div className="mb-4 flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Adicionar serviço..."
+                    value={newService}
+                    onChange={(e) => setNewService(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddService()}
+                    className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A1A1A] focus:border-[#C38B94] focus:outline-none"
+                  />
+                  <button 
+                    onClick={handleAddService}
+                    type="button"
+                    className="bg-[#C38B94] hover:bg-[#A87080] text-white rounded-full w-10 h-10 flex items-center justify-center font-bold transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {services.map((service, index) => (
+                    <span 
+                      key={index}
+                      className="bg-gray-200 text-[#1A1A1A] text-xs px-3 py-1 rounded-full font-bold flex items-center gap-2 hover:bg-gray-300 transition-colors"
+                    >
+                      {service}
+                      <button
+                        onClick={() => handleRemoveService(index)}
+                        type="button"
+                        className="cursor-pointer hover:text-red-300"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Botão Salvar */}
+              <button 
+                onClick={handleSaveProfile}
+                type="button"
+                className="w-full bg-[#C38B94] hover:bg-[#A87080] text-white rounded-xl py-3 font-bold transition-colors"
+              >
+                💾 Salvar Perfil
+              </button>
             </div>
           </>
         )}

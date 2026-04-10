@@ -38,7 +38,7 @@ function formatAddress(data: ReverseGeocodeResponse) {
   return [street, a.suburb, city, a.state].filter(Boolean).join(' - ') || data.display_name || '';
 }
 
-export function ServiceRequestPage({ onBack }: { onBack: () => void }) {
+export function ServiceRequestPage({ onBack, onGoToClientArea }: { onBack: () => void; onGoToClientArea: () => void }) {
   const [position, setPosition] = useState<[number, number]>([-23.5505, -46.6333]); // São Paulo
   const [address, setAddress] = useState('');
   const [isLocating, setIsLocating] = useState(false);
@@ -114,13 +114,22 @@ export function ServiceRequestPage({ onBack }: { onBack: () => void }) {
               Aguardando respostas de profissionais
             </p>
 
-            <button
-              type="button"
-              onClick={onBack}
-              className="px-8 py-3 rounded-full border border-gray-200 text-gray-600 hover:border-[#C38B94] hover:text-[#C38B94] transition-colors"
-            >
-              Voltar ao Início
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={onGoToClientArea}
+                className="px-8 py-3 rounded-full bg-[#C38B94] text-white hover:bg-[#A87080] transition-colors"
+              >
+                Ver minha área
+              </button>
+              <button
+                type="button"
+                onClick={onBack}
+                className="px-8 py-3 rounded-full border border-gray-200 text-gray-600 hover:border-[#C38B94] hover:text-[#C38B94] transition-colors"
+              >
+                Voltar ao Início
+              </button>
+            </div>
           </div>
         </div>
       </div>

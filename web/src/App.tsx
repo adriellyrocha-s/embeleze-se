@@ -19,6 +19,7 @@ import { ProductsPage } from './pages/ProductsPage'
 import { ServiceRequestPage } from './pages/ServiceRequestPage'
 import { PartnerRegister } from './pages/PartnerRegister'
 import { PartnerDashboard } from './pages/PartnerDashboard'
+import { ClientAreaPage } from './pages/ClientAreaPage'
 import { CartPage } from './pages/CartPage'
 import { Register } from './pages/Register'
 import { PaymentPage } from './pages/PaymentPage'
@@ -26,7 +27,7 @@ import { ProfessionalDetailsPage } from './pages/ProfessionalDetailsPage'
 import { AdminPanelPage } from './pages/AdminPanelPage'
 
 // Definição dos tipos de rotas para o TypeScript
-type Page = 'home' | 'professionals' | 'products' | 'request' | 'client-register' | 'partner-register' | 'partner-dashboard' | 'admin-panel' | 'cart' | 'payment' | 'professional-details'
+type Page = 'home' | 'professionals' | 'products' | 'request' | 'client-register' | 'partner-register' | 'partner-dashboard' | 'admin-panel' | 'cart' | 'payment' | 'professional-details' | 'client-area'
 
 const ADMIN_SESSION_TIMEOUT_MS = 30 * 60 * 1000
 const ADMIN_LAST_ACTIVITY_KEY = 'embeleze_admin_last_activity'
@@ -270,7 +271,18 @@ export default function App() {
 
         {/* --- ROTA: SOLICITAR SERVIÇO (MAPA - image_7a52c9.png) --- */}
         {currentPage === 'request' && (
-          <ServiceRequestPage onBack={() => setCurrentPage('home')} />
+          <ServiceRequestPage
+            onBack={() => setCurrentPage('home')}
+            onGoToClientArea={() => setCurrentPage('client-area')}
+          />
+        )}
+
+        {/* --- ROTA: ÁREA DO CLIENTE --- */}
+        {currentPage === 'client-area' && (
+          <ClientAreaPage
+            onNewRequest={() => setCurrentPage('request')}
+            onBackHome={() => setCurrentPage('home')}
+          />
         )}
 
         {/* --- ROTA: CRIAR PERFIL DE CLIENTE --- */}
@@ -325,6 +337,7 @@ export default function App() {
             onBackHome={() => setCurrentPage('home')}
             onGoToRegister={() => setCurrentPage('partner-register')}
             onGoToAdminPanel={() => setCurrentPage('admin-panel')}
+            onGoToClientArea={() => setCurrentPage('client-area')}
           />
         )}
 

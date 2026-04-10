@@ -2,7 +2,7 @@ import { Search, ShoppingBag, User, LayoutDashboard, LogOut } from 'lucide-react
 import { useState } from 'react'
 
 type NavbarProps = {
-  onNavigate?: (page: 'home' | 'professionals' | 'products' | 'request' | 'partner-register' | 'partner-dashboard' | 'admin-panel' | 'cart') => void
+  onNavigate?: (page: 'home' | 'professionals' | 'products' | 'request' | 'partner-register' | 'partner-dashboard' | 'admin-panel' | 'cart' | 'client-area') => void
   cartItemsCount?: number
 }
 
@@ -164,6 +164,20 @@ export function Navbar({ onNavigate, cartItemsCount = 0 }: NavbarProps) {
               >
                 <LayoutDashboard size={16} />
                 Painel da Parceira
+              </button>
+            )}
+
+            {isClientLoggedIn && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsProfileOpen(false)
+                  onNavigate?.('client-area')
+                }}
+                className="mt-4 w-full flex items-center gap-3 text-gray-700 hover:text-[#C38B94] transition-colors"
+              >
+                <LayoutDashboard size={16} />
+                Minha Área
               </button>
             )}
 
