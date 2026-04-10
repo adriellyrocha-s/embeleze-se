@@ -37,6 +37,7 @@ export default function App() {
   const [initialProfessionalsCategory, setInitialProfessionalsCategory] = useState('Todas')
   const [cartItems, setCartItems] = useState<Array<ProductItem & { unitPrice: number; quantity: number }>>([])
   const [selectedProfessional, setSelectedProfessional] = useState<ProfessionalCard | null>(null)
+  const [previousPage, setPreviousPage] = useState<Page | null>(null)
   const isPartnerDashboard = currentPage === 'partner-dashboard'
   const isAdminPanel = currentPage === 'admin-panel'
   const isAdminLoggedIn = localStorage.getItem('embeleze_admin_logged_in') === 'true'
@@ -126,6 +127,7 @@ export default function App() {
 
   function handleNavigate(page: Page) {
     if (page === 'request' && !hasClientProfile) {
+      setPreviousPage('request')
       setCurrentPage('client-register')
       return
     }
@@ -277,9 +279,13 @@ export default function App() {
             onBack={() => setCurrentPage('home')}
             onProfileCreated={() => {
               localStorage.setItem('embeleze_client_profile_created', 'true')
-              setCurrentPage('payment')
+              setCurrentPage(previousPage === 'request' ? 'request' : 'payment')
+              setPreviousPage(null)
             }}
-            onSkip={() => setCurrentPage('cart')}
+            onSkip={() => {
+              setCurrentPage(previousPage === 'request' ? 'request' : 'cart')
+              setPreviousPage(null)
+            }}
           />
         )}
 
